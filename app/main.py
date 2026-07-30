@@ -1,11 +1,10 @@
 from typing import Optional
 from fastapi import Body, FastAPI, Response, status, HTTPException, Depends
-from pydantic import BaseModel
 from random import randrange
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
-from . import models
+from . import models, schemas
 from .database import engine, get_db
 from sqlalchemy.orm import Session
 
@@ -13,12 +12,6 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-
-class Post(BaseModel):
-    title:  str
-    content: str
-    published: bool = True
-    # rating: Optional[int] = None
 
 while True:
     try:
@@ -45,43 +38,28 @@ my_posts = [
     }
 ]
 
-def find_post(id):
-    for p in my_posts:
-        if p['id'] == id:
-            return p
-
-def find_index_post(id):
-    for i, p in enumerate(my_posts):
-        if p['id'] == id:
-            return i
-
 @app.get("/")
 def root():
     return {"message" : "Welcome to my API!"}
 
 @app.get("/posts")
-def get_posts():
-    cursor.execute("""SELECT * FROM POSTS""")
-    posts = cursor.fetchall()
-    print(posts)
+def get_posts(db: Session = Depends(get_db)):
+    posts = db.query(models.Post).all()
     return {"data":posts}
 
 
 @app.post("/posts", status_code = status.HTTP_201_CREATED)
-def create_posts(post: Post):
-    # this way prevents sql injection
-    cursor.execute("""INSERT INTO posts (title, content, published) VALUES(%s, %s, %s) RETURNING * """, (post.title, post.content, post.published))
+def create_posts(post: schemas.PostCreate, db: Session = Depends(get_db)):
+    new_post = models.Post(**post.dict())
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post)
 
-    #this is to fetch the final row that was added in the database just like in postgress so that we can print it.
-    new_post = cursor.fetchone()
-    #Then we finalise by committing the change. If we don't commit the data is not added to the database because the changes are only staged at this point.
-    conn.commit()
     return {"data": new_post}
 
 @app.get("/posts/{id}")
-def get_post(id: int): # response: Response
-    cursor.execute("""SELECT * from posts WHERE id = %s""", (str(id)))
-    post = cursor.fetchone()
+def get_post(id: int, db: Session = Depends(get_db)): # response: Response
+    post = db.query(models.Post).filter(models.Post.id == id).first()
     if not post:
         raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, 
                             detail=f"Post with id {id} was not found")
@@ -89,32 +67,28 @@ def get_post(id: int): # response: Response
 
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int):
+def delete_post(id: int, db: Session = Depends(get_db)):
+    post = db.query(models.Post).filter(models.Post.id == id)
 
-    cursor.execute("""DELETE FROM posts WHERE id = %s returning * """, (str(id)))
-    deleted_post = cursor.fetchone()
-    conn.commit()
-
-    if deleted_post == None:
+    if post.first() == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 
                             detail = f"post with ID {id} doesnot exist")
     
+    post.delete(synchronize_session=False)
+    db.commit()
+
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @app.put("/posts/{id}")
-def update_post(id: int, post: Post):
-    cursor.execute("""UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING * """, 
-                   (post.title, post.content, post.published, (str(id))))
-    updated_post = cursor.fetchone()
-    conn.commit()
-    if updated_post == None:
+def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends(get_db)):
+    post_query = db.query(models.Post).filter(models.Post.id == id)
+
+    post = post_query.first()
+    if post == None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 
                                 detail = f"post with ID {id} doesnot exist")
+    post_query.update(updated_post.dict(), synchronize_session=False) # type: ignore
 
-    return {'data': updated_post}
-
-
-@app.get("sqlalchemy")
-def test_posts(db: Session = Depends(get_db)):
-    return {"status" : "Success"}
+    db.commit()
+    return {'data': post_query.first()}
