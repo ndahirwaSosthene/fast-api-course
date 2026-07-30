@@ -1,23 +1,17 @@
 from typing import Optional
-from fastapi import Body, FastAPI, Response, status, HTTPException
+from fastapi import Body, FastAPI, Response, status, HTTPException, Depends
 from pydantic import BaseModel
 from random import randrange
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
 from . import models
-from .database import engine, SessionLocal
+from .database import engine, get_db
+from sqlalchemy.orm import Session
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 class Post(BaseModel):
@@ -119,3 +113,8 @@ def update_post(id: int, post: Post):
                                 detail = f"post with ID {id} doesnot exist")
 
     return {'data': updated_post}
+
+
+@app.get("sqlalchemy")
+def test_posts(db: Session = Depends(get_db)):
+    return {"status" : "Success"}
