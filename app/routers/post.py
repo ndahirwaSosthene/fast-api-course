@@ -9,17 +9,14 @@ router = APIRouter(
     tags = ['posts']
 )
 
-@router.get("/")
-def root():
-    return {"message" : "Welcome to my API!"}
-
-@router.get("/", response_model=List[schemas.Post])
+@router.get("", response_model=List[schemas.Post])
 def get_posts(db: Session = Depends(get_db)):
+    print("Database dependency reached")
     posts = db.query(models.Post).all()
     return posts
 
 
-@router.post("/", status_code = status.HTTP_201_CREATED, response_model=schemas.Post)
+@router.post("", status_code = status.HTTP_201_CREATED, response_model=schemas.Post)
 def create_posts(post: schemas.PostCreate, db: Session = Depends(get_db)):
     new_post = models.Post(**post.dict())
     db.add(new_post)
