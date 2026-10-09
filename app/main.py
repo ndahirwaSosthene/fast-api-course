@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from .routers import post, user, auth
 
 
+# creates the database with tables from the models given in the models file
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
