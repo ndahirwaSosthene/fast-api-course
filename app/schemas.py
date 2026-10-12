@@ -16,6 +16,7 @@ class Post(PostBase):
     id: int
     created_at: datetime
     owner_id: int
+    owner: UserOut
 
     # This can be helpful when we are getting an error getting a response model
     # class Config:
@@ -29,6 +30,7 @@ class UserOut(BaseModel):
     id: int
     email: EmailStr
     created_at: datetime
+    
 
 class UserLogin(BaseModel):
     email: EmailStr
