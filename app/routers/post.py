@@ -1,6 +1,6 @@
 from fastapi import Body, FastAPI, Response, status, HTTPException, Depends, APIRouter
 from .. import models, schemas, oauth2
-from typing import List
+from typing import List, Optional
 from ..database import engine, get_db
 from sqlalchemy.orm import Session
 
@@ -10,9 +10,12 @@ router = APIRouter(
 )
 
 @router.get("", response_model=List[schemas.Post])
-def get_posts(db: Session = Depends(get_db)):
+def get_posts(db: Session = Depends(get_db), limit: int= 10, skip:int = 0, search: Optional[str] = ""): # here we can even add query parameters like limit
+
+    print (limit)
+
     print("Database dependency reached")
-    posts = db.query(models.Post).all()
+    posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
     return posts
 
 
