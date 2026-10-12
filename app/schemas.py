@@ -15,6 +15,7 @@ class PostCreate(PostBase):
 class Post(PostBase):
     id: int
     created_at: datetime
+    owner_id: int
 
     # This can be helpful when we are getting an error getting a response model
     # class Config:
