@@ -1,6 +1,6 @@
-from typing import Optional
+from typing import Annotated, Optional
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field, conint
 from datetime import datetime
 
 
@@ -42,5 +42,10 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     id: Optional[int] = None
+
+
+class Vote(BaseModel):
+    post_id: int
+    dir: Annotated[int, Field(strict=True, le=1)] # this is used instead of conint which is going to be deprecated
     
 
