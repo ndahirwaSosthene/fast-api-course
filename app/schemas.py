@@ -1,10 +1,14 @@
 from typing import Annotated, Optional
 
-from pydantic import BaseModel, EmailStr, Field, conint
+from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
+from pydantic import ConfigDict
+
+class ORMBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
 
-class PostBase(BaseModel):
+class PostBase(ORMBase):
     title:  str
     content: str
     published: bool = True
@@ -18,15 +22,25 @@ class Post(PostBase):
     owner_id: int
     owner: UserOut
 
-    # This can be helpful when we are getting an error getting a response model
-    # class Config:
-    #     orm_mode = True
+class PostResponse(ORMBase):
+    id: int
+    title: str
+    content: str
+    published: bool
+    created_at: datetime
+    owner_id: int
+    owner: UserOut
+
+
+class PostOut(ORMBase):
+    post: PostResponse
+    votes: int
 
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
 
-class UserOut(BaseModel):
+class UserOut(ORMBase):
     id: int
     email: EmailStr
     created_at: datetime
@@ -47,5 +61,4 @@ class TokenData(BaseModel):
 class Vote(BaseModel):
     post_id: int
     dir: Annotated[int, Field(strict=True, le=1)] # this is used instead of conint which is going to be deprecated
-    
 
