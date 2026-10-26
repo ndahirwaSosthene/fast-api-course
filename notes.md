@@ -22,3 +22,12 @@ database schema and rollback changes to any point in time
 database
 4. Alembic can also automatically pull database models from
 Sqlalchemy and generate the proper tables
+
+
+## CORS
+1. Cross Origin Resource Sharing(CORS) allows you to make
+requests from a web browser on one domain to a server on a
+different domain
+
+2. By default our API will only allow web browsers running on the
+same domain as our server to make requests to it
