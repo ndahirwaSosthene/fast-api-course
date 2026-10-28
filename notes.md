@@ -31,3 +31,10 @@ different domain
 
 2. By default our API will only allow web browsers running on the
 same domain as our server to make requests to it
+
+
+# Passwords:
+# - john@gmail: smith
+# - hellen@gmail: smith
+# - sosthene@gmail: ndahirwa
+# - superman@gmail: lois
