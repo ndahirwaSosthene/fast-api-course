@@ -7,6 +7,15 @@ from pydantic import ConfigDict
 class ORMBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+
+class UserOut(ORMBase):
+    id: int
+    email: EmailStr
+    created_at: datetime
+
 
 class PostBase(ORMBase):
     title:  str
@@ -35,16 +44,6 @@ class PostResponse(ORMBase):
 class PostOut(ORMBase):
     post: PostResponse
     votes: int
-
-class UserCreate(BaseModel):
-    email: EmailStr
-    password: str
-
-class UserOut(ORMBase):
-    id: int
-    email: EmailStr
-    created_at: datetime
-    
 
 class UserLogin(BaseModel):
     email: EmailStr
