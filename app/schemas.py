@@ -16,7 +16,6 @@ class UserOut(ORMBase):
     email: EmailStr
     created_at: datetime
 
-
 class PostBase(ORMBase):
     title:  str
     content: str
